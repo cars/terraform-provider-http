@@ -41,6 +41,8 @@ The following arguments are supported:
 
 * `request_headers` - (Optional) A map of strings representing additional HTTP
   headers to include in the request.
+  
+* `request_method` - (Optional) A string specifying which HTTP Method to use when making the Request. Defaults to `GET`
 
 * `ca_certificate` - (Optional) PEM-encoded root certificates bundle for TLS authentication.
 
