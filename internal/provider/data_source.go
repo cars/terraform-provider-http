@@ -14,6 +14,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func dataSource() *schema.Resource {
@@ -35,6 +36,15 @@ func dataSource() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+			},
+			"request_method": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "GET",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				ValidateFunc: validation.StringInSlice([]string{"GET", "POST", "PUT", "PATCH"}, true),
 			},
 
 			"timeout": {
@@ -79,6 +89,7 @@ func dataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{
 	headers := d.Get("request_headers").(map[string]interface{})
 	caCert := d.Get("ca_certificate").(string)
 	timeout := d.Get("timeout").(int)
+	reqMethod := d.Get("request_method").(string)
 
 	tr := &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
@@ -102,7 +113,7 @@ func dataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{
 		Timeout:   time.Duration(timeout) * time.Second, // defaults to 0
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	req, err := http.NewRequestWithContext(ctx, reqMethod, url, nil)
 	if err != nil {
 		return append(diags, diag.Errorf("Error creating request: %s", err)...)
 	}
@@ -118,9 +129,9 @@ func dataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
-		return append(diags, diag.Errorf("HTTP request error. Response code: %d", resp.StatusCode)...)
-	}
+	//if resp.StatusCode != 200 {
+	//return append(diags, diag.Errorf("HTTP request error. Response code: %d", resp.StatusCode)...)
+	//}
 
 	contentType := resp.Header.Get("Content-Type")
 	if contentType == "" || isContentTypeText(contentType) == false {
